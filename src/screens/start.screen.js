@@ -40,7 +40,7 @@ export default function Start({ navigation }) {
                         </Text>
                         <TouchableOpacity
                             disabled={false}
-                            onPress={() => { }}
+                            onPress={() => { navigation.navigate("Dashboard") }}
                             activeOpacity={0.8}>
                             <View style={[ms.mainButtionContainer, { backgroundColor: colors.mainBlue, marginTop: 16 }]}>
                                 <Text style={[ms.mainButtion, {
@@ -54,7 +54,7 @@ export default function Start({ navigation }) {
 
                         <TouchableOpacity
                             disabled={false}
-                            onPress={() => { }}
+                            onPress={() => { navigation.navigate("Ref") }}
                             activeOpacity={0.8}>
                             <View style={[ms.mainButtionContainer, { backgroundColor: colors.Gray, marginTop: 16 }]}>
                                 <Text style={[ms.mainButtion, {

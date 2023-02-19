@@ -27,7 +27,7 @@ export default function Landmark({ navigation }) {
                 <View>
                     <View style={{ flexDirection: 'row', paddingTop: 15, paddingHorizontal: 15 }}>
                         <View style={{ flex: 1 }}>
-                            <TouchableOpacity onPress={() => { }}>
+                            <TouchableOpacity onPress={() => { navigation.goBack(); }}>
                                 <Image source={require('../../assets/images/back.png')} style={ms.back} />
                             </TouchableOpacity>
                         </View>

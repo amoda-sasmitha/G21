@@ -15,9 +15,60 @@ import {
 import ms from '../util/main.styles'
 import { fonts, colors, dimensions } from '../util/types'
 import Dialog, { DialogContent, DialogTitle, DialogButton } from 'react-native-popup-dialog'
+import Geolocation from '@react-native-community/geolocation';
+import {
+    accelerometer,
+    gyroscope,
+    setUpdateIntervalForType,
+    SensorTypes
+} from "react-native-sensors";
+
+setUpdateIntervalForType(SensorTypes.accelerometer, 400); // defaults to 100ms
+
 
 export default function Dashboard({ navigation }) {
     const [isRefFound, setRefFound] = useState(false);
+    const [position, setPosition] = useState({ lat: null, lng: null });
+    const [subscriptionId, setSubscriptionId] = useState(null);
+
+    const watchPosition = () => {
+        try {
+            console.log("called");
+            const watchID = Geolocation.watchPosition(
+                (position) => {
+                    console.log(position);
+                    setPosition({
+                        lat: position?.coords?.latitude ?? null,
+                        lng: position?.coords?.longitude ?? null,
+                    });
+                },
+                (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
+                { interval: 1 }
+            );
+            setSubscriptionId(watchID);
+        } catch (error) {
+            Alert.alert('WatchPosition Error', JSON.stringify(error));
+        }
+    };
+
+    const subscription = accelerometer.subscribe(({ x, y, z, timestamp }) =>
+        console.log({ x, y, z, timestamp })
+    );
+
+    const clearWatch = () => {
+        subscriptionId !== null && Geolocation.clearWatch(subscriptionId);
+        setSubscriptionId(null);
+        setPosition(null);
+    };
+
+    useEffect(() => {
+        watchPosition();
+        return () => {
+            subscription.unsubscribe();
+            clearWatch();
+        };
+    }, []);
+
     return (
         <SafeAreaView style={{ backgroundColor: colors.White }}>
             <StatusBar barStyle={'dark-content'} backgroundColor={colors.White} />
@@ -25,7 +76,7 @@ export default function Dashboard({ navigation }) {
                 <View style={styles.card}>
                     <View style={{ flexDirection: 'row', paddingTop: 12, alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
-                            <TouchableOpacity onPress={() => { }}>
+                            <TouchableOpacity onPress={() => { navigation.goBack(); }}>
                                 <Image source={require('../../assets/images/back.png')} style={ms.back} />
                             </TouchableOpacity>
                         </View>
@@ -52,7 +103,9 @@ export default function Dashboard({ navigation }) {
                             fontSize: 20,
                             fontWeight: 'bold',
                             fontFamily: fonts.semiBold
-                        }]}>X : 12.214321</Text>
+                        }]}>
+                            X : {position?.lat != null ? Number(position.lat).toFixed(6) : '-'}
+                        </Text>
                     </View>
 
                     <View style={[ms.mainButtionContainer, {
@@ -65,7 +118,8 @@ export default function Dashboard({ navigation }) {
                             fontSize: 20,
                             fontWeight: 'bold',
                             fontFamily: fonts.semiBold
-                        }]}>Y : 43.654321</Text>
+                        }]}> Y : {position?.lng != null ? Number(position.lng).toFixed(6) : '-'}
+                        </Text>
                     </View>
 
                     <Text style={[ms.mainButtion, {

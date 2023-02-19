@@ -26,7 +26,7 @@ export default function RecordedPath({ navigation }) {
                 <View style={styles.card}>
                     <View style={{ flexDirection: 'row', paddingTop: 12, alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
-                            <TouchableOpacity onPress={() => { }}>
+                            <TouchableOpacity onPress={() => { navigation.goBack(); }}>
                                 <Image source={require('../../assets/images/back.png')} style={ms.back} />
                             </TouchableOpacity>
                         </View>
@@ -40,8 +40,8 @@ export default function RecordedPath({ navigation }) {
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
                         {
                             [...Array(25).keys()].map((value, i) => (
-                                <TouchableOpacity style={styles.iconwrap}>
-                                    <Text style={styles.icon}>10</Text>
+                                <TouchableOpacity key={i} style={styles.iconwrap}>
+                                    <Text style={styles.icon}>{i + 1}</Text>
                                 </TouchableOpacity>
                             ))}
                     </View>

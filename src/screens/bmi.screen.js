@@ -18,9 +18,9 @@ import SelectDropdown from 'react-native-select-dropdown'
 
 export default function BMI({ navigation }) {
     const data = ['Male', 'Female'];
-    const [height, setHeight] = useState(0);
-    const [weight, setWeight] = useState(0);
-    const [age, setAge] = useState(0);
+    const [height, setHeight] = useState('');
+    const [weight, setWeight] = useState('');
+    const [age, setAge] = useState('');
     const [gender, setGender] = useState('');
     return (
         <SafeAreaView style={{ backgroundColor: colors.White }}>
@@ -29,7 +29,7 @@ export default function BMI({ navigation }) {
                 <View style={styles.card}>
                     <View style={{ flexDirection: 'row', paddingTop: 15 }}>
                         <View style={{ flex: 1 }}>
-                            <TouchableOpacity onPress={() => { }}>
+                            <TouchableOpacity onPress={() => { navigation.goBack(); }}>
                                 <Image source={require('../../assets/images/back.png')} style={ms.back} />
                             </TouchableOpacity>
                         </View>

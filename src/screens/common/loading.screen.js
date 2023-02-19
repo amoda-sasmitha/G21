@@ -26,15 +26,16 @@ export default function LoadingPage({ navigation }) {
     }, [])
 
     const LoadData = async () => {
-        //     navigation.dispatch(
-        //         CommonActions.reset({
-        //             index: 0,
-        //             routes: [{ name: "BMI" }]
-        //         })
-        //     );
-    }
-    // const user = await userSignOut();
+        setTimeout(function () {
+            navigation.dispatch(
+                CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: "Start" }]
+                })
+            );
+        }, 1500);
 
+    }
     return (
         <SafeAreaView style={{ backgroundColor: colors.White }}>
             <StatusBar barStyle={'light-content'} backgroundColor={colors.darkBlue} />

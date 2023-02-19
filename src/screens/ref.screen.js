@@ -26,7 +26,7 @@ export default function REF({ navigation }) {
                 <View style={styles.card}>
                     <View style={{ flexDirection: 'row', paddingTop: 15 }}>
                         <View style={{ flex: 1 }}>
-                            <TouchableOpacity onPress={() => { }}>
+                            <TouchableOpacity onPress={() => { navigation.goBack(); }}>
                                 <Image source={require('../../assets/images/back.png')} style={ms.back} />
                             </TouchableOpacity>
                         </View>
@@ -37,7 +37,7 @@ export default function REF({ navigation }) {
 
                     <TouchableOpacity
                         disabled={false}
-                        onPress={() => { }}
+                        onPress={() => { navigation.navigate("Landmark") }}
                         activeOpacity={0.8}>
                         <View style={[ms.mainButtionContainer, {
                             backgroundColor: colors.mainBlue,
@@ -55,7 +55,7 @@ export default function REF({ navigation }) {
 
                     <TouchableOpacity
                         disabled={false}
-                        onPress={() => { }}
+                        onPress={() => { navigation.navigate("Recorded") }}
                         activeOpacity={0.8}>
                         <View style={[ms.mainButtionContainer, {
                             backgroundColor: colors.mainBlue,
@@ -73,7 +73,7 @@ export default function REF({ navigation }) {
 
                     <TouchableOpacity
                         disabled={false}
-                        onPress={() => { }}
+                        onPress={() => { navigation.navigate("BMI") }}
                         activeOpacity={0.8}>
                         <View style={[ms.mainButtionContainer, {
                             backgroundColor: colors.mainBlue,
