@@ -16,8 +16,21 @@ import ms from '../util/main.styles'
 import { fonts, colors, dimensions } from '../util/types'
 import Icon from 'react-native-vector-icons/dist/FontAwesome'
 import SelectDropdown from 'react-native-select-dropdown'
+import { useRoute } from '@react-navigation/native';
+import { useSelector } from 'react-redux'
 
 export default function RefPoint({ navigation }) {
+    const route = useRoute();
+    const point = route?.params?.point ?? null;
+    const refs = useSelector((state) => state.ref.ref);
+    const ref_data = refs.find(ref => ref.point === point);
+    console.log(ref_data);
+    if (!ref_data) {
+        return (
+            <SafeAreaView style={{ backgroundColor: colors.White }}>
+            </SafeAreaView>
+        )
+    }
 
     return (
         <SafeAreaView style={{ backgroundColor: colors.White }}>
@@ -26,114 +39,146 @@ export default function RefPoint({ navigation }) {
                 <View style={styles.card}>
                     <View style={{ flexDirection: 'row', paddingTop: 12, alignItems: 'center' }}>
                         <View style={{ flex: 1 }}>
-                            <TouchableOpacity onPress={() => { }}>
+                            <TouchableOpacity onPress={() => { navigation.goBack(); }}>
                                 <Image source={require('../../assets/images/back.png')} style={ms.back} />
                             </TouchableOpacity>
                         </View>
                         <Text style={{ ...ms.mainTitle, ...styles.main }}>
-                            {'Reference point 01'}
+                            {`Reference point ${String(point).padStart(2, '0')}`}
                         </Text>
                     </View>
 
+                    <ScrollView
+                        contentInsetAdjustmentBehavior="automatic"
+                        contentContainerStyle={{ flexGrow: 1, paddingBottom: 180 }}
+                        style={{ paddingHorizontal: 15 }}>
 
-                    <View style={[ms.mainButtionContainer, {
-                        backgroundColor: colors.Gray,
-                        marginHorizontal: dimensions.widthOf(5),
-                        marginTop: dimensions.heightOf(5)
-                    }]}>
+                        <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginHorizontal: dimensions.widthOf(5),
+                            marginTop: dimensions.heightOf(5)
+                        }]}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}>
+                                X : {ref_data.position?.lat != null ? Number(ref_data.position.lat).toFixed(6) : '-'}
+                            </Text>
+                        </View>
+
+                        <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginHorizontal: dimensions.widthOf(5),
+                            marginTop: 20
+                        }]}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}>Y : {ref_data.position?.lng != null ? Number(ref_data.position.lng).toFixed(6) : '-'}
+                            </Text>
+                        </View>
+
                         <Text style={[ms.mainButtion, {
-                            color: colors.White,
-                            fontSize: 20,
-                            fontWeight: 'bold',
+                            color: colors.mainBlue,
+                            fontSize: 18,
+                            marginTop: dimensions.heightOf(5),
+                            textAlign: 'center',
+                            fontWeight: '700',
                             fontFamily: fonts.semiBold
-                        }]}>X : 12.214321</Text>
-                    </View>
+                        }]}>Accelerometer
+                        </Text>
 
-                    <View style={[ms.mainButtionContainer, {
-                        backgroundColor: colors.Gray,
-                        marginHorizontal: dimensions.widthOf(5),
-                        marginTop: 20
-                    }]}>
+                        <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginTop: 10,
+                            marginHorizontal: dimensions.widthOf(5),
+                        }]}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}>{
+                                    `X : ${ref_data?.accelerometer.x != null ? Number(ref_data?.accelerometer.x).toFixed(6) : '0:00'}\nY : ${ref_data?.accelerometer.y != null ? Number(ref_data?.accelerometer.y).toFixed(6) : '0:00'}`
+                                }</Text>
+                        </View>
+
                         <Text style={[ms.mainButtion, {
-                            color: colors.White,
-                            fontSize: 20,
-                            fontWeight: 'bold',
+                            color: colors.mainBlue,
+                            fontSize: 18,
+                            marginTop: dimensions.heightOf(5),
+                            textAlign: 'center',
+                            fontWeight: '700',
                             fontFamily: fonts.semiBold
-                        }]}>Y : 43.654321</Text>
-                    </View>
+                        }]}>Gyroscopes
+                        </Text>
 
-                    <Text style={[ms.mainButtion, {
-                        color: colors.mainBlue,
-                        fontSize: 18,
-                        marginTop: dimensions.heightOf(8),
-                        textAlign: 'center',
-                        fontWeight: '700',
-                        fontFamily: fonts.semiBold
-                    }]}>Gyroscopes
-                    </Text>
+                        <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginTop: 10,
+                            marginHorizontal: dimensions.widthOf(5),
+                        }]}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}>{
+                                    `X : ${ref_data?.gyroscope.x != null ? Number(ref_data?.gyroscope.x).toFixed(6) : '0:00'}\nY : ${ref_data?.gyroscope.y != null ? Number(ref_data?.gyroscope.y).toFixed(6) : '0:00'}\nZ : ${ref_data?.gyroscope.z != null ? Number(ref_data?.gyroscope.z).toFixed(6) : '0:00'}`
+                                }</Text>
+                        </View>
 
-                    <View style={[ms.mainButtionContainer, {
-                        backgroundColor: colors.Gray,
-                        marginTop: 10,
-                        marginHorizontal: dimensions.widthOf(5),
-                    }]}>
                         <Text style={[ms.mainButtion, {
-                            color: colors.White,
-                            fontSize: 20,
-                            fontWeight: 'bold',
+                            color: colors.mainBlue,
+                            fontSize: 18,
+                            marginTop: dimensions.heightOf(5),
+                            textAlign: 'center',
+                            fontWeight: '700',
                             fontFamily: fonts.semiBold
-                        }]}>X : 12.214321</Text>
-                    </View>
+                        }]}>Steps Count
+                        </Text>
 
-                    <Text style={[ms.mainButtion, {
-                        color: colors.mainBlue,
-                        fontSize: 18,
-                        marginTop: dimensions.heightOf(5),
-                        textAlign: 'center',
-                        fontWeight: '700',
-                        fontFamily: fonts.semiBold
-                    }]}>Steps Count
-                    </Text>
+                        <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginTop: 10,
+                            marginHorizontal: dimensions.widthOf(5),
+                        }]}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}>{ref_data.steps}</Text>
+                        </View>
 
-                    <View style={[ms.mainButtionContainer, {
-                        backgroundColor: colors.Gray,
-                        marginTop: 10,
-                        marginHorizontal: dimensions.widthOf(5),
-                    }]}>
                         <Text style={[ms.mainButtion, {
-                            color: colors.White,
-                            fontSize: 20,
-                            fontWeight: 'bold',
+                            color: colors.mainBlue,
+                            fontSize: 18,
+                            marginTop: dimensions.heightOf(5),
+                            textAlign: 'center',
+                            fontWeight: '700',
                             fontFamily: fonts.semiBold
-                        }]}>15</Text>
-                    </View>
+                        }]}>Direction
+                        </Text>
 
-                    <Text style={[ms.mainButtion, {
-                        color: colors.mainBlue,
-                        fontSize: 18,
-                        marginTop: dimensions.heightOf(5),
-                        textAlign: 'center',
-                        fontWeight: '700',
-                        fontFamily: fonts.semiBold
-                    }]}>Direction
-                    </Text>
+                        <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginTop: 10,
+                            marginHorizontal: dimensions.widthOf(5),
+                        }]}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}>-</Text>
+                        </View>
 
-                    <View style={[ms.mainButtionContainer, {
-                        backgroundColor: colors.Gray,
-                        marginTop: 10,
-                        marginHorizontal: dimensions.widthOf(5),
-                    }]}>
-                        <Text style={[ms.mainButtion, {
-                            color: colors.White,
-                            fontSize: 20,
-                            fontWeight: 'bold',
-                            fontFamily: fonts.semiBold
-                        }]}>-</Text>
-                    </View>
-
-
-
-
+                    </ScrollView>
                 </View>
             </View>
         </SafeAreaView>
@@ -182,7 +227,6 @@ const styles = StyleSheet.create({
         backgroundColor: colors.White,
         width: '100%',
         height: dimensions.heightOf(100),
-        paddingHorizontal: 15,
         paddingVertical: 6,
         marginVertical: 0,
     },

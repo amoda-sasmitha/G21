@@ -16,9 +16,11 @@ import ms from '../util/main.styles'
 import { fonts, colors, dimensions } from '../util/types'
 import Icon from 'react-native-vector-icons/dist/FontAwesome'
 import SelectDropdown from 'react-native-select-dropdown'
+import { useSelector } from 'react-redux'
 
 export default function RecordedPath({ navigation }) {
 
+    const refs = useSelector((state) => state.ref.ref);
     return (
         <SafeAreaView style={{ backgroundColor: colors.White }}>
             <StatusBar barStyle={'dark-content'} backgroundColor={colors.White} />
@@ -35,15 +37,27 @@ export default function RecordedPath({ navigation }) {
                         </Text>
                     </View>
                     <Text style={{ ...ms.ssTitle, ...styles.ss }}>
-                        {'Select the reference point'}
+                        {'Select the Landmark'}
                     </Text>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
                         {
-                            [...Array(25).keys()].map((value, i) => (
-                                <TouchableOpacity key={i} style={styles.iconwrap}>
-                                    <Text style={styles.icon}>{i + 1}</Text>
-                                </TouchableOpacity>
-                            ))}
+                            [...Array(25).keys()].map((value, i) => {
+                                const current = (i + 1);
+                                const found = refs.find(ref => ref.point === current);
+                                let obj = { backgroundColor: colors.Gray }
+                                if (found) {
+                                    obj = { backgroundColor: colors.Gray2 }
+                                }
+                                return (
+                                    <TouchableOpacity key={i}
+                                        onPress={() => { navigation.navigate("RefPoint", { point: current }) }}
+                                        activeOpacity={found ? 0.8 : 1}
+                                        style={{ ...styles.iconwrap, ...obj }}>
+                                        <Text style={styles.icon}>{i + 1}</Text>
+                                    </TouchableOpacity>
+                                );
+                            }
+                            )}
                     </View>
                 </View>
             </View>
@@ -59,7 +73,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         width: dimensions.widthOf(12),
         height: dimensions.widthOf(12),
-        backgroundColor: colors.Gray,
         borderRadius: 50,
     },
     icon: {
@@ -88,7 +101,7 @@ const styles = StyleSheet.create({
     },
     ss: {
         fontSize: 18,
-        paddingLeft: 25,
+        paddingLeft: 20,
         paddingBottom: 20,
         fontWeight: '700',
         color: colors.Gray2,

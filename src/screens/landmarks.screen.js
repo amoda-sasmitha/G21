@@ -14,12 +14,11 @@ import {
 } from 'react-native';
 import ms from '../util/main.styles'
 import { fonts, colors, dimensions } from '../util/types'
+import { landmarks } from '../util/landmarks'
 import Icon from 'react-native-vector-icons/dist/FontAwesome'
 import SelectDropdown from 'react-native-select-dropdown'
 
 export default function Landmark({ navigation }) {
-    const x = 10.12564;
-    const y = 15.26564;
     return (
         <SafeAreaView style={{ backgroundColor: colors.White }}>
             <StatusBar barStyle={'dark-content'} backgroundColor={colors.White} />
@@ -40,7 +39,7 @@ export default function Landmark({ navigation }) {
                         contentContainerStyle={{ flexGrow: 1, paddingBottom: 180 }}
                         style={{ paddingHorizontal: 15 }}>
                         {
-                            [...Array(25).keys()].map((value, i) => (
+                            landmarks.map((value, i) => (
                                 <View key={i} style={{ paddingVertical: 12 }}>
                                     <Text style={[ms.mainButtion, {
                                         color: colors.mainBlue,
@@ -67,14 +66,14 @@ export default function Landmark({ navigation }) {
                                                 fontSize: 16,
                                                 fontWeight: '500',
                                                 fontFamily: fonts.regular
-                                            }]}>X: {(x * (i + 1)).toFixed(4)}
+                                            }]}>X: {(value.x).toFixed(7)}
                                             </Text>
                                             <Text style={[ms.mainButtion, {
                                                 color: colors.Black,
                                                 fontSize: 16,
                                                 fontWeight: '500',
                                                 fontFamily: fonts.regular
-                                            }]}>Y: {(y + (i + 1)).toFixed(4)}
+                                            }]}>Y: {(value.y).toFixed(7)}
                                             </Text>
                                         </View>
                                     </TouchableOpacity>

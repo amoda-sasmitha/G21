@@ -52,7 +52,7 @@ export default function BMI({ navigation }) {
                         />
                         <View style={styles.rightprop}>
                             <Text style={{ ...ms.ssTitle, ...{ textAlign: 'center', } }}>
-                                {'CM'}
+                                {'cm'}
                             </Text>
                         </View>
                     </View>
@@ -68,7 +68,7 @@ export default function BMI({ navigation }) {
                         />
                         <View style={styles.rightprop}>
                             <Text style={{ ...ms.ssTitle, ...{ textAlign: 'center', } }}>
-                                {'KG'}
+                                {'kg'}
                             </Text>
                         </View>
                     </View>

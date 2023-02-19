@@ -1,5 +1,5 @@
 import { combineReducers } from "redux";
-import auth from "./auth";
+import ref from "./ref";
 
 const rehydrated = (state = false, action) => {
     switch (action.type) {
@@ -12,5 +12,5 @@ const rehydrated = (state = false, action) => {
 
 export default {
     rehydrated,
-    auth,
+    ref,
 };

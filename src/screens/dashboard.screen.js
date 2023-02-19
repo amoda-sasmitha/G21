@@ -10,64 +10,102 @@ import {
     TextInput,
     TouchableOpacity,
     View,
-    Radi
+    Radi,
+    DeviceEventEmitter
 } from 'react-native';
 import ms from '../util/main.styles'
 import { fonts, colors, dimensions } from '../util/types'
+import { landmarks } from '../util/landmarks'
+import { distanceCalc } from '../util/distance.cal'
 import Dialog, { DialogContent, DialogTitle, DialogButton } from 'react-native-popup-dialog'
 import Geolocation from '@react-native-community/geolocation';
-import {
-    accelerometer,
-    gyroscope,
-    setUpdateIntervalForType,
-    SensorTypes
-} from "react-native-sensors";
+import { accelerometer, setUpdateIntervalForType, SensorTypes, gyroscope } from "react-native-sensors";
+import { useSelector, useDispatch } from 'react-redux'
 
 setUpdateIntervalForType(SensorTypes.accelerometer, 400); // defaults to 100ms
 
-
 export default function Dashboard({ navigation }) {
     const [isRefFound, setRefFound] = useState(false);
+    const [refData, setRef] = useState(null);
     const [position, setPosition] = useState({ lat: null, lng: null });
-    const [subscriptionId, setSubscriptionId] = useState(null);
-
-    const watchPosition = () => {
-        try {
-            console.log("called");
-            const watchID = Geolocation.watchPosition(
-                (position) => {
-                    console.log(position);
-                    setPosition({
-                        lat: position?.coords?.latitude ?? null,
-                        lng: position?.coords?.longitude ?? null,
-                    });
-                },
-                (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
-                { interval: 1 }
-            );
-            setSubscriptionId(watchID);
-        } catch (error) {
-            Alert.alert('WatchPosition Error', JSON.stringify(error));
-        }
-    };
-
-    const subscription = accelerometer.subscribe(({ x, y, z, timestamp }) =>
-        console.log({ x, y, z, timestamp })
-    );
-
-    const clearWatch = () => {
-        subscriptionId !== null && Geolocation.clearWatch(subscriptionId);
-        setSubscriptionId(null);
-        setPosition(null);
-    };
+    const [accelerometer_data, setAccelerometer] = useState({ x: null, y: null, z: null });
+    const [gyroscope_data, setGyroscope] = useState({ x: null, y: null, z: null });
+    const [c, setc] = useState(0);
+    const dispatch = useDispatch()
 
     useEffect(() => {
-        watchPosition();
+        const subscription_acc = accelerometer.subscribe(({ x, y, z }) =>
+            setAccelerometer({ x, y, z })
+        );
+        const subscription_gyro = accelerometer.subscribe(({ x, y, z }) =>
+            setGyroscope({ x, y, z })
+        );
+
+        const watchID = Geolocation.watchPosition(
+            (position) => {
+                const lat = position?.coords?.latitude ?? null;
+                const lng = position?.coords?.longitude ?? null;
+                if (lat != null && lng != null) {
+                    setPosition({ lat, lng });
+                    setc(c + 1);
+                    for (let i = 0; i < landmarks.length; i++) {
+                        const mark = landmarks[i];
+                        const dis = distanceCalc(lat, lng, mark.x, mark.y);
+                        if (dis <= 15 && !isRefFound) {
+                            setRefFound(true);
+                            setRef({
+                                accelerometer: { x: accelerometer_data.x, y: accelerometer_data.y, z: accelerometer_data.z },
+                                gyroscope: gyroscope_data,
+                                position,
+                                point: i,
+                                steps: 0
+                            })
+                            break;
+                        }
+
+                    }
+                }
+            },
+            (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
+            { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 },
+        );
+        // const locationInterval = setInterval(() => {
+        //     Geolocation.getCurrentPosition(
+        //         position => {
+        //             const lat = position?.coords?.latitude ?? null;
+        //             const lng = position?.coords?.longitude ?? null;
+        //             if (lat != null && lng != null && !isRefFound) {
+        //                 console.log({ lat, lng });
+        //                 setPosition({ lat, lng });
+        //                 for (let i = 0; i < landmarks.length; i++) {
+        //                     const mark = landmarks[i];
+        //                     const dis = distanceCalc(lat, lng, mark.x, mark.y);
+        //                     if (dis <= 15 && !isRefFound) {
+        //                         setRefFound(true);
+        //                         setRef({
+        //                             accelerometer: accelerometer_data,
+        //                             gyroscope: gyroscope_data,
+        //                             position
+        //                         })
+        //                         break;
+        //                     }
+
+        //                 }
+        //             }
+        //         },
+        //         (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
+        //         { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 },
+        //     );
+        // }, 1000);
+
         return () => {
-            subscription.unsubscribe();
-            clearWatch();
+            subscription_acc.unsubscribe();
+            subscription_gyro.unsubscribe();
+            // clearInterval(locationInterval);
+            Geolocation.clearWatch(watchID);
         };
     }, []);
+
 
     return (
         <SafeAreaView style={{ backgroundColor: colors.White }}>
@@ -81,7 +119,7 @@ export default function Dashboard({ navigation }) {
                             </TouchableOpacity>
                         </View>
                         <Text style={{ ...ms.mainTitle, ...styles.main }}>
-                            {'Dashboard'}
+                            {'Dashboard ' + c}
                         </Text>
                         <View style={{ flex: 2 }}>
                             <TouchableOpacity onPress={() => { setRefFound(true) }}>
@@ -125,7 +163,32 @@ export default function Dashboard({ navigation }) {
                     <Text style={[ms.mainButtion, {
                         color: colors.mainBlue,
                         fontSize: 18,
-                        marginTop: dimensions.heightOf(8),
+                        marginTop: dimensions.heightOf(5),
+                        textAlign: 'center',
+                        fontWeight: '700',
+                        fontFamily: fonts.semiBold
+                    }]}>Accelerometer
+                    </Text>
+
+                    <View style={[ms.mainButtionContainer, {
+                        backgroundColor: colors.Gray,
+                        marginTop: 10,
+                        marginHorizontal: dimensions.widthOf(5),
+                    }]}>
+                        <Text style={[ms.mainButtion, {
+                            color: colors.White,
+                            fontSize: 20,
+                            fontWeight: 'bold',
+                            fontFamily: fonts.semiBold
+                        }]}>{
+                                `X : ${accelerometer_data.x != null ? Number(accelerometer_data.x).toFixed(6) : '0:00'}\nY : ${accelerometer_data.y != null ? Number(accelerometer_data.y).toFixed(6) : '0:00'}`
+                            }</Text>
+                    </View>
+
+                    <Text style={[ms.mainButtion, {
+                        color: colors.mainBlue,
+                        fontSize: 18,
+                        marginTop: dimensions.heightOf(5),
                         textAlign: 'center',
                         fontWeight: '700',
                         fontFamily: fonts.semiBold
@@ -142,7 +205,9 @@ export default function Dashboard({ navigation }) {
                             fontSize: 20,
                             fontWeight: 'bold',
                             fontFamily: fonts.semiBold
-                        }]}>X : 12.214321</Text>
+                        }]}>{
+                                `X : ${gyroscope_data.x != null ? Number(gyroscope_data.x).toFixed(6) : '0:00'}\nY : ${gyroscope_data.y != null ? Number(gyroscope_data.y).toFixed(6) : '0:00'}\nZ : ${gyroscope_data.z != null ? Number(gyroscope_data.z).toFixed(6) : '0:00'}`
+                            }</Text>
                     </View>
 
                     <Text style={[ms.mainButtion, {
@@ -192,7 +257,6 @@ export default function Dashboard({ navigation }) {
                     </View>
                     <Dialog
                         visible={isRefFound}
-                        onTouchOutside={() => { setRefFound(false) }}
                         dialogTitle={<DialogTitle title="Reference Point" />}
                     >
                         <DialogContent>
@@ -210,7 +274,15 @@ export default function Dashboard({ navigation }) {
 
                                 <TouchableOpacity
                                     disabled={false}
-                                    onPress={() => { }}
+                                    onPress={() => {
+                                        setRefFound(false);
+                                        dispatch({
+                                            type: 'ADD',
+                                            payload: refData
+                                        })
+                                        setRef(null);
+                                        navigation.goBack();
+                                    }}
                                     activeOpacity={0.8}>
                                     <View style={[ms.mainButtionContainer, {
                                         backgroundColor: colors.mainBlue,
@@ -228,7 +300,14 @@ export default function Dashboard({ navigation }) {
 
                                 <TouchableOpacity
                                     disabled={false}
-                                    onPress={() => { }}
+                                    onPress={() => {
+                                        setRefFound(false);
+                                        dispatch({
+                                            type: 'ADD',
+                                            payload: refData
+                                        })
+                                        setRef(null);
+                                    }}
                                     activeOpacity={0.8}>
                                     <View style={[ms.mainButtionContainer, {
                                         backgroundColor: colors.mainBlue,
@@ -246,7 +325,7 @@ export default function Dashboard({ navigation }) {
 
                                 <TouchableOpacity
                                     disabled={false}
-                                    onPress={() => { setRefFound(false) }}
+                                    onPress={() => { setRefFound(false); setRef(null); }}
                                     activeOpacity={0.8}>
                                     <Text style={[ms.mainButtion, {
                                         color: colors.mainBlue,
