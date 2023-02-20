@@ -87,23 +87,27 @@ export default function Dashboard({ navigation }) {
             (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
             { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 },
         );
+
         // const locationInterval = setInterval(() => {
         //     Geolocation.getCurrentPosition(
         //         position => {
         //             const lat = position?.coords?.latitude ?? null;
         //             const lng = position?.coords?.longitude ?? null;
-        //             if (lat != null && lng != null && !isRefFound) {
-        //                 console.log({ lat, lng });
+        //             if (lat != null && lng != null) {
         //                 setPosition({ lat, lng });
+
         //                 for (let i = 0; i < landmarks.length; i++) {
         //                     const mark = landmarks[i];
         //                     const dis = distanceCalc(lat, lng, mark.x, mark.y);
         //                     if (dis <= 15 && !isRefFound) {
         //                         setRefFound(true);
         //                         setRef({
-        //                             accelerometer: accelerometer_data,
-        //                             gyroscope: gyroscope_data,
-        //                             position
+        //                             accelerometer: curAccelerometer.current,
+        //                             gyroscope: curGyroscope.current,
+        //                             position: curPosition.current,
+        //                             point: i,
+        //                             turn: curTurn.current,
+        //                             steps: curSteps.current
         //                         })
         //                         break;
         //                     }
@@ -159,7 +163,7 @@ export default function Dashboard({ navigation }) {
                             {'Dashboard'}
                         </Text>
                         <View style={{ flex: 2 }}>
-                            <TouchableOpacity onPress={() => { setRefFound(true) }}>
+                            <TouchableOpacity onPress={() => { navigation.navigate('Ref') }}>
                                 <Text style={{ color: colors.Black, fontSize: 20 }}>
                                     {'Ref'}
                                 </Text>
@@ -218,7 +222,7 @@ export default function Dashboard({ navigation }) {
                                 textAlign: 'center',
                                 fontWeight: '700',
                                 fontFamily: fonts.semiBold
-                            }]}>Accelerometer {c}
+                            }]}>Accelerometer
                             </Text>
                         </TouchableOpacity>
 

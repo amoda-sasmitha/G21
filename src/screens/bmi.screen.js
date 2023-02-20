@@ -7,6 +7,7 @@ import {
     FlatList,
     Image,
     Text,
+    ToastAndroid,
     TextInput,
     TouchableOpacity,
     View,
@@ -21,7 +22,67 @@ export default function BMI({ navigation }) {
     const [height, setHeight] = useState('');
     const [weight, setWeight] = useState('');
     const [age, setAge] = useState('');
+    const [bmi, setBMI] = useState(null);
     const [gender, setGender] = useState('');
+
+    handleBMI = () => {
+        setBMI(null);
+        if (height == '' || isNaN(height)) {
+            handleToast('Please add correct Height!');
+            return;
+        }
+
+        if (weight == '' || isNaN(weight)) {
+            handleToast('Please add correct Weight!');
+            return;
+        }
+
+        if (age == '' || isNaN(age)) {
+            handleToast('Please add correct Age!');
+            return;
+        }
+
+        if (gender == '') {
+            handleToast('Please select a Gender!');
+            return;
+        }
+        const bmi = (weight / Math.pow((height / 100), 2)).toFixed(2);
+        let category = '';
+        let color = '#FFFFFF';
+
+        if (bmi < 18.5) {
+            category = "Underweight";
+            color = "#ffc44d";
+        }
+        //If BMI is >=18.5 and <=24.9
+        else if (bmi >= 18.5 && bmi <= 24.9) {
+            category = "Normal Weight";
+            color = "#0be881";
+        }
+        //If BMI is >= 25 and <= 29.9 
+        else if (bmi >= 25 && bmi <= 29.9) {
+            category = "Overweight";
+            color = "#ff884d";
+        }
+        //If BMI is <= 30
+        else {
+            category = "Obese";
+            color = "#ff5e57";
+        }
+        setBMI({
+            bmi: bmi,
+            category,
+            color
+        })
+    }
+
+    handleToast = (msg) => {
+        ToastAndroid.showWithGravity(
+            msg,
+            ToastAndroid.SHORT,
+            ToastAndroid.BOTTOM,
+        );
+    }
     return (
         <SafeAreaView style={{ backgroundColor: colors.White }}>
             <StatusBar barStyle={'dark-content'} backgroundColor={colors.White} />
@@ -119,11 +180,18 @@ export default function BMI({ navigation }) {
                         </View>
                     </View>
                     <View style={{ height: dimensions.heightOf(20) }}>
-
+                        {bmi != null && <View>
+                            <Text style={{
+                                paddingTop: 35,
+                                textAlign: 'center', fontWeight: 'bold', color: colors.Black,
+                                fontFamily: fonts.extraBold, fontSize: 26
+                            }}>{`BMI : ${bmi.bmi}`}</Text>
+                            <Text style={{ textAlign: 'center', fontSize: 20, color: bmi.color }}>{`${bmi.category}`}</Text>
+                        </View>}
                     </View>
                     <TouchableOpacity
                         disabled={false}
-                        onPress={() => { }}
+                        onPress={() => { handleBMI(); }}
                         activeOpacity={0.8}>
                         <View style={[ms.mainButtionContainer, { backgroundColor: colors.mainBlue, marginTop: 16 }]}>
                             <Text style={[ms.mainButtion, {
@@ -131,7 +199,7 @@ export default function BMI({ navigation }) {
                                 fontSize: 20,
                                 fontWeight: 'bold',
                                 fontFamily: fonts.extraBold
-                            }]}>Continue</Text>
+                            }]}>Calculate</Text>
                         </View>
                     </TouchableOpacity>
                 </View>
