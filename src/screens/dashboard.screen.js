@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import useState from 'react-usestateref';
 import {
     SafeAreaView,
     ScrollView,
@@ -25,12 +26,12 @@ import { useSelector, useDispatch } from 'react-redux'
 setUpdateIntervalForType(SensorTypes.accelerometer, 400); // defaults to 100ms
 
 export default function Dashboard({ navigation }) {
-    const [isRefFound, setRefFound] = useState(false);
-    const [refData, setRef] = useState(null);
-    const [position, setPosition] = useState({ lat: null, lng: null });
-    const [accelerometer_data, setAccelerometer] = useState({ x: null, y: null, z: null });
-    const [gyroscope_data, setGyroscope] = useState({ x: null, y: null, z: null });
-    const [c, setc] = useState(0);
+    const [isRefFound, setRefFound, curRefFound] = useState(false);
+    const [refData, setRef, curRef] = useState(null);
+    const [position, setPosition, curPosition] = useState({ lat: null, lng: null });
+    const [accelerometer_data, setAccelerometer, curAccelerometer] = useState({ x: null, y: null, z: null });
+    const [gyroscope_data, setGyroscope, curGyroscope] = useState({ x: null, y: null, z: null });
+    const [c, setc, curc] = useState(0);
     const dispatch = useDispatch()
 
     useEffect(() => {
@@ -42,9 +43,9 @@ export default function Dashboard({ navigation }) {
         );
 
         const watchID = Geolocation.watchPosition(
-            (position) => {
-                const lat = position?.coords?.latitude ?? null;
-                const lng = position?.coords?.longitude ?? null;
+            (res_position) => {
+                const lat = res_position?.coords?.latitude ?? null;
+                const lng = res_position?.coords?.longitude ?? null;
                 if (lat != null && lng != null) {
                     setPosition({ lat, lng });
                     setc(c + 1);
@@ -54,9 +55,9 @@ export default function Dashboard({ navigation }) {
                         if (dis <= 15 && !isRefFound) {
                             setRefFound(true);
                             setRef({
-                                accelerometer: { x: accelerometer_data.x, y: accelerometer_data.y, z: accelerometer_data.z },
-                                gyroscope: gyroscope_data,
-                                position,
+                                accelerometer: curAccelerometer.current,
+                                gyroscope: curGyroscope.current,
+                                position: curPosition.current,
                                 point: i,
                                 steps: 0
                             })

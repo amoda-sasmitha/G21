@@ -16,11 +16,13 @@ import ms from '../util/main.styles'
 import { fonts, colors, dimensions } from '../util/types'
 import Icon from 'react-native-vector-icons/dist/FontAwesome'
 import SelectDropdown from 'react-native-select-dropdown'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 
 export default function RecordedPath({ navigation }) {
 
     const refs = useSelector((state) => state.ref.ref);
+    const dispatch = useDispatch()
+
     return (
         <SafeAreaView style={{ backgroundColor: colors.White }}>
             <StatusBar barStyle={'dark-content'} backgroundColor={colors.White} />
@@ -50,7 +52,7 @@ export default function RecordedPath({ navigation }) {
                                 }
                                 return (
                                     <TouchableOpacity key={i}
-                                        onPress={() => { navigation.navigate("RefPoint", { point: current }) }}
+                                        onPress={() => { navigation.navigate("RefPoint", { point: i }) }}
                                         activeOpacity={found ? 0.8 : 1}
                                         style={{ ...styles.iconwrap, ...obj }}>
                                         <Text style={styles.icon}>{i + 1}</Text>
@@ -59,6 +61,14 @@ export default function RecordedPath({ navigation }) {
                             }
                             )}
                     </View>
+
+                    <TouchableOpacity onPress={() => {
+                        dispatch({
+                            type: 'RESET'
+                        })
+                    }}>
+                        <Text style={{ fontFamily: fonts.light, paddingLeft: 20, paddingTop: 10 }}>Clear Records</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </SafeAreaView>

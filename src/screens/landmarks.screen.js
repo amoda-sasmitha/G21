@@ -47,7 +47,7 @@ export default function Landmark({ navigation }) {
                                         textAlign: 'center',
                                         fontWeight: '700',
                                         fontFamily: fonts.semiBold
-                                    }]}>Point {i + 1}
+                                    }]}>Point {String(i + 1).padStart(2, '0')}
                                     </Text>
                                     <TouchableOpacity
                                         disabled={false}

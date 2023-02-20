@@ -23,7 +23,7 @@ export default function RefPoint({ navigation }) {
     const route = useRoute();
     const point = route?.params?.point ?? null;
     const refs = useSelector((state) => state.ref.ref);
-    const ref_data = refs.find(ref => ref.point === point);
+    const ref_data = refs.reverse().find(ref => ref.point === (point + 1));
     console.log(ref_data);
     if (!ref_data) {
         return (
@@ -44,7 +44,7 @@ export default function RefPoint({ navigation }) {
                             </TouchableOpacity>
                         </View>
                         <Text style={{ ...ms.mainTitle, ...styles.main }}>
-                            {`Reference point ${String(point).padStart(2, '0')}`}
+                            {`Reference point ${String(point + 1).padStart(2, '0')}`}
                         </Text>
                     </View>
 
@@ -155,7 +155,7 @@ export default function RefPoint({ navigation }) {
                             }]}>{ref_data.steps}</Text>
                         </View>
 
-                        <Text style={[ms.mainButtion, {
+                        {/* <Text style={[ms.mainButtion, {
                             color: colors.mainBlue,
                             fontSize: 18,
                             marginTop: dimensions.heightOf(5),
@@ -163,9 +163,9 @@ export default function RefPoint({ navigation }) {
                             fontWeight: '700',
                             fontFamily: fonts.semiBold
                         }]}>Direction
-                        </Text>
+                        </Text> */}
 
-                        <View style={[ms.mainButtionContainer, {
+                        {/* <View style={[ms.mainButtionContainer, {
                             backgroundColor: colors.Gray,
                             marginTop: 10,
                             marginHorizontal: dimensions.widthOf(5),
@@ -176,7 +176,7 @@ export default function RefPoint({ navigation }) {
                                 fontWeight: 'bold',
                                 fontFamily: fonts.semiBold
                             }]}>-</Text>
-                        </View>
+                        </View> */}
 
                     </ScrollView>
                 </View>
