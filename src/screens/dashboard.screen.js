@@ -25,6 +25,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { startCounter, stopCounter } from 'react-native-accurate-step-counter';
 
 setUpdateIntervalForType(SensorTypes.accelerometer, 400); // defaults to 100ms
+setUpdateIntervalForType(SensorTypes.gyroscope, 400); // defaults to 100ms
 
 export default function Dashboard({ navigation }) {
     const [isRefFound, setRefFound, curRefFound] = useState(false);
@@ -45,15 +46,15 @@ export default function Dashboard({ navigation }) {
             setTurn(decideTurn(curAccelerometer.current, { x, y, z }));
             setAccelerometer({ x, y, z })
         });
-        const subscription_gyro = accelerometer.subscribe(({ x, y, z }) =>
+        const subscription_gyro = gyroscope.subscribe(({ x, y, z }) =>
             setGyroscope({ x, y, z })
         );
 
         const config = {
-            default_threshold: 10.0,
+            default_threshold: 15.0,
             default_delay: 150000000,
             cheatInterval: 3000,
-            onStepCountChange: (stepCount) => { setSteps(curSteps.current + stepCount) },
+            onStepCountChange: (stepCount) => { setSteps(stepCount) },
             onCheat: () => { console.log("Stopped") }
         }
 
@@ -85,7 +86,7 @@ export default function Dashboard({ navigation }) {
                 }
             },
             (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
-            { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 },
+            { enableHighAccuracy: false, distanceFilter: 0, interval: 4000, fastestInterval: 2000 },
         );
 
         // const locationInterval = setInterval(() => {
@@ -116,9 +117,9 @@ export default function Dashboard({ navigation }) {
         //             }
         //         },
         //         (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
-        //         { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 },
+        //         { enableHighAccuracy: false, timeout: 5000, maximumAge: 0 },
         //     );
-        // }, 1000);
+        // }, 2000);
 
         return () => {
             subscription_acc.unsubscribe();
