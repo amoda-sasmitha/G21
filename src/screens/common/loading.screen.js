@@ -17,23 +17,52 @@ import { Formik } from 'formik'
 import { loginSchema } from '../../schemas/login.schema'
 import { hasSuccess, ErrorMessage } from '../../util/validate'
 import { CommonActions } from '@react-navigation/native';
-
+import axios from 'axios';
+import { landmarks } from '../../util/landmarks'
+import { useSelector, useDispatch } from 'react-redux'
 
 export default function LoadingPage({ navigation }) {
+
+    const dispatch = useDispatch();
 
     useEffect(() => {
         LoadData();
     }, [])
 
     const LoadData = async () => {
-        setTimeout(function () {
+        try {
+            const results = await axios.get('https://raw.githubusercontent.com/amoda-sasmitha/landmark-dataset/main/data.json');
+            if (results.data) {
+                dispatch({
+                    type: 'LANDMARKS',
+                    payload: results.data
+                })
+            } else {
+                dispatch({
+                    type: 'LANDMARKS',
+                    payload: landmarks
+                })
+            }
             navigation.dispatch(
                 CommonActions.reset({
                     index: 0,
                     routes: [{ name: "Start" }]
                 })
             );
-        }, 1500);
+        } catch (err) {
+            console.log(err)
+            dispatch({
+                type: 'LANDMARKS',
+                payload: landmarks
+            });
+            navigation.dispatch(
+                CommonActions.reset({
+                    index: 0,
+                    routes: [{ name: "Start" }]
+                })
+            );
+        }
+
 
     }
     return (

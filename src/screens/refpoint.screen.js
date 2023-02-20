@@ -23,7 +23,7 @@ export default function RefPoint({ navigation }) {
     const route = useRoute();
     const point = route?.params?.point ?? null;
     const refs = useSelector((state) => state.ref.ref);
-    const ref_data = refs.reverse().find(ref => ref.point === (point + 1));
+    const ref_data = refs.reverse().find(ref => ref.point === point);
     console.log(ref_data);
     if (!ref_data) {
         return (

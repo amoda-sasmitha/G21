@@ -44,7 +44,7 @@ export default function RecordedPath({ navigation }) {
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
                         {
                             [...Array(25).keys()].map((value, i) => {
-                                const current = (i + 1);
+                                const current = i;
                                 const found = refs.find(ref => ref.point === current);
                                 let obj = { backgroundColor: colors.Gray }
                                 if (found) {
@@ -52,7 +52,7 @@ export default function RecordedPath({ navigation }) {
                                 }
                                 return (
                                     <TouchableOpacity key={i}
-                                        onPress={() => { navigation.navigate("RefPoint", { point: i }) }}
+                                        onPress={() => { if (found) navigation.navigate("RefPoint", { point: i }) }}
                                         activeOpacity={found ? 0.8 : 1}
                                         style={{ ...styles.iconwrap, ...obj }}>
                                         <Text style={styles.icon}>{i + 1}</Text>

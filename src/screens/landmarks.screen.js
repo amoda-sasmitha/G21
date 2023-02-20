@@ -14,11 +14,14 @@ import {
 } from 'react-native';
 import ms from '../util/main.styles'
 import { fonts, colors, dimensions } from '../util/types'
-import { landmarks } from '../util/landmarks'
 import Icon from 'react-native-vector-icons/dist/FontAwesome'
 import SelectDropdown from 'react-native-select-dropdown'
+import { useSelector, useDispatch } from 'react-redux'
 
 export default function Landmark({ navigation }) {
+
+    const data = useSelector((state) => state.ref.landmarks);
+    const landmarks = JSON.parse(JSON.stringify(data));
     return (
         <SafeAreaView style={{ backgroundColor: colors.White }}>
             <StatusBar barStyle={'dark-content'} backgroundColor={colors.White} />

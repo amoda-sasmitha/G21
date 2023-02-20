@@ -16,12 +16,13 @@ import {
 } from 'react-native';
 import ms from '../util/main.styles'
 import { fonts, colors, dimensions } from '../util/types'
-import { landmarks } from '../util/landmarks'
+// import { landmarks } from '../util/landmarks'
 import { distanceCalc } from '../util/distance.cal'
 import Dialog, { DialogContent, DialogTitle, DialogButton } from 'react-native-popup-dialog'
 import Geolocation from '@react-native-community/geolocation';
 import { accelerometer, setUpdateIntervalForType, SensorTypes, gyroscope } from "react-native-sensors";
 import { useSelector, useDispatch } from 'react-redux'
+import { startCounter, stopCounter } from 'react-native-accurate-step-counter';
 
 setUpdateIntervalForType(SensorTypes.accelerometer, 400); // defaults to 100ms
 
@@ -31,24 +32,39 @@ export default function Dashboard({ navigation }) {
     const [position, setPosition, curPosition] = useState({ lat: null, lng: null });
     const [accelerometer_data, setAccelerometer, curAccelerometer] = useState({ x: null, y: null, z: null });
     const [gyroscope_data, setGyroscope, curGyroscope] = useState({ x: null, y: null, z: null });
+    const [steps, setSteps, curSteps] = useState(0);
+    const [turn, setTurn, curTurn] = useState('-');
     const [c, setc, curc] = useState(0);
     const dispatch = useDispatch()
 
+    const data_land = useSelector((state) => state.ref.landmarks);
+    const landmarks = JSON.parse(JSON.stringify(data_land));
+
     useEffect(() => {
-        const subscription_acc = accelerometer.subscribe(({ x, y, z }) =>
+        const subscription_acc = accelerometer.subscribe(({ x, y, z }) => {
+            setTurn(decideTurn(curAccelerometer.current, { x, y, z }));
             setAccelerometer({ x, y, z })
-        );
+        });
         const subscription_gyro = accelerometer.subscribe(({ x, y, z }) =>
             setGyroscope({ x, y, z })
         );
 
+        const config = {
+            default_threshold: 10.0,
+            default_delay: 150000000,
+            cheatInterval: 3000,
+            onStepCountChange: (stepCount) => { setSteps(curSteps.current + stepCount) },
+            onCheat: () => { console.log("Stopped") }
+        }
+
+        startCounter(config);
         const watchID = Geolocation.watchPosition(
             (res_position) => {
                 const lat = res_position?.coords?.latitude ?? null;
                 const lng = res_position?.coords?.longitude ?? null;
                 if (lat != null && lng != null) {
                     setPosition({ lat, lng });
-                    setc(c + 1);
+
                     for (let i = 0; i < landmarks.length; i++) {
                         const mark = landmarks[i];
                         const dis = distanceCalc(lat, lng, mark.x, mark.y);
@@ -59,7 +75,8 @@ export default function Dashboard({ navigation }) {
                                 gyroscope: curGyroscope.current,
                                 position: curPosition.current,
                                 point: i,
-                                steps: 0
+                                turn: curTurn.current,
+                                steps: curSteps.current
                             })
                             break;
                         }
@@ -104,9 +121,28 @@ export default function Dashboard({ navigation }) {
             subscription_gyro.unsubscribe();
             // clearInterval(locationInterval);
             Geolocation.clearWatch(watchID);
+            stopCounter();
         };
     }, []);
 
+    const decideTurn = (current, now) => {
+        const NOISE = 2.0;
+        let deltaX = Math.abs(current.x - now.x);
+        let deltaY = Math.abs(current.y - now.y);
+        let deltaZ = Math.abs(current.z - now.z);
+        // if (deltaX < NOISE) deltaX = 0.0;
+        // if (deltaY < NOISE) deltaY = 0.0;
+        // if (deltaZ < NOISE) deltaZ = 0.0;
+
+        if (deltaX > deltaY) {
+            if (deltaX < NOISE * -1)
+                return 'RIGHT';
+            else
+                return 'LEFT';
+        } else {
+            return '-';
+        }
+    }
 
     return (
         <SafeAreaView style={{ backgroundColor: colors.White }}>
@@ -120,7 +156,7 @@ export default function Dashboard({ navigation }) {
                             </TouchableOpacity>
                         </View>
                         <Text style={{ ...ms.mainTitle, ...styles.main }}>
-                            {'Dashboard ' + c}
+                            {'Dashboard'}
                         </Text>
                         <View style={{ flex: 2 }}>
                             <TouchableOpacity onPress={() => { setRefFound(true) }}>
@@ -130,132 +166,148 @@ export default function Dashboard({ navigation }) {
                             </TouchableOpacity>
                         </View>
                     </View>
+                    <ScrollView
+                        contentInsetAdjustmentBehavior="automatic"
+                        contentContainerStyle={{ flexGrow: 1, paddingBottom: 180 }}
+                        style={{ paddingHorizontal: 15 }}>
 
-
-                    <View style={[ms.mainButtionContainer, {
-                        backgroundColor: colors.Gray,
-                        marginHorizontal: dimensions.widthOf(5),
-                        marginTop: dimensions.heightOf(5)
-                    }]}>
-                        <Text style={[ms.mainButtion, {
-                            color: colors.White,
-                            fontSize: 20,
-                            fontWeight: 'bold',
-                            fontFamily: fonts.semiBold
+                        <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginHorizontal: dimensions.widthOf(5),
+                            marginTop: dimensions.heightOf(5)
                         }]}>
-                            X : {position?.lat != null ? Number(position.lat).toFixed(6) : '-'}
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}>
+                                X : {position?.lat != null ? Number(position.lat).toFixed(6) : '-'}
+                            </Text>
+                        </View>
+
+                        <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginHorizontal: dimensions.widthOf(5),
+                            marginTop: 20
+                        }]}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}> Y : {position?.lng != null ? Number(position.lng).toFixed(6) : '-'}
+                            </Text>
+                        </View>
+
+                        <TouchableOpacity activeOpacity={1} onPress={() => {
+                            setRefFound(true);
+                            setRef({
+                                accelerometer: curAccelerometer.current,
+                                gyroscope: curGyroscope.current,
+                                position: curPosition.current,
+                                point: curc.current,
+                                turn: curTurn.current,
+                                steps: curSteps.current
+                            })
+                        }}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.mainBlue,
+                                fontSize: 18,
+                                marginTop: dimensions.heightOf(5),
+                                textAlign: 'center',
+                                fontWeight: '700',
+                                fontFamily: fonts.semiBold
+                            }]}>Accelerometer {c}
+                            </Text>
+                        </TouchableOpacity>
+
+                        <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginTop: 10,
+                            marginHorizontal: dimensions.widthOf(5),
+                        }]}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}>{
+                                    `X : ${accelerometer_data.x != null ? Number(accelerometer_data.x).toFixed(6) : '0:00'}\nY : ${accelerometer_data.y != null ? Number(accelerometer_data.y).toFixed(6) : '0:00'}`
+                                }</Text>
+                        </View>
+
+                        <Text style={[ms.mainButtion, {
+                            color: colors.mainBlue,
+                            fontSize: 18,
+                            marginTop: dimensions.heightOf(5),
+                            textAlign: 'center',
+                            fontWeight: '700',
+                            fontFamily: fonts.semiBold
+                        }]}>Gyroscopes
                         </Text>
-                    </View>
 
-                    <View style={[ms.mainButtionContainer, {
-                        backgroundColor: colors.Gray,
-                        marginHorizontal: dimensions.widthOf(5),
-                        marginTop: 20
-                    }]}>
+                        <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginTop: 10,
+                            marginHorizontal: dimensions.widthOf(5),
+                        }]}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}>{
+                                    `X : ${gyroscope_data.x != null ? Number(gyroscope_data.x).toFixed(6) : '0:00'}\nY : ${gyroscope_data.y != null ? Number(gyroscope_data.y).toFixed(6) : '0:00'}\nZ : ${gyroscope_data.z != null ? Number(gyroscope_data.z).toFixed(6) : '0:00'}`
+                                }</Text>
+                        </View>
+
                         <Text style={[ms.mainButtion, {
-                            color: colors.White,
-                            fontSize: 20,
-                            fontWeight: 'bold',
+                            color: colors.mainBlue,
+                            fontSize: 18,
+                            marginTop: dimensions.heightOf(5),
+                            textAlign: 'center',
+                            fontWeight: '700',
                             fontFamily: fonts.semiBold
-                        }]}> Y : {position?.lng != null ? Number(position.lng).toFixed(6) : '-'}
+                        }]}>Steps Count
                         </Text>
-                    </View>
 
-                    <Text style={[ms.mainButtion, {
-                        color: colors.mainBlue,
-                        fontSize: 18,
-                        marginTop: dimensions.heightOf(5),
-                        textAlign: 'center',
-                        fontWeight: '700',
-                        fontFamily: fonts.semiBold
-                    }]}>Accelerometer
-                    </Text>
+                        <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginTop: 10,
+                            marginHorizontal: dimensions.widthOf(5),
+                        }]}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}>{steps}</Text>
+                        </View>
 
-                    <View style={[ms.mainButtionContainer, {
-                        backgroundColor: colors.Gray,
-                        marginTop: 10,
-                        marginHorizontal: dimensions.widthOf(5),
-                    }]}>
-                        <Text style={[ms.mainButtion, {
-                            color: colors.White,
-                            fontSize: 20,
-                            fontWeight: 'bold',
+                        {/* <Text style={[ms.mainButtion, {
+                            color: colors.mainBlue,
+                            fontSize: 18,
+                            marginTop: dimensions.heightOf(5),
+                            textAlign: 'center',
+                            fontWeight: '700',
                             fontFamily: fonts.semiBold
-                        }]}>{
-                                `X : ${accelerometer_data.x != null ? Number(accelerometer_data.x).toFixed(6) : '0:00'}\nY : ${accelerometer_data.y != null ? Number(accelerometer_data.y).toFixed(6) : '0:00'}`
-                            }</Text>
-                    </View>
+                        }]}>Direction
+                        </Text> */}
 
-                    <Text style={[ms.mainButtion, {
-                        color: colors.mainBlue,
-                        fontSize: 18,
-                        marginTop: dimensions.heightOf(5),
-                        textAlign: 'center',
-                        fontWeight: '700',
-                        fontFamily: fonts.semiBold
-                    }]}>Gyroscopes
-                    </Text>
-
-                    <View style={[ms.mainButtionContainer, {
-                        backgroundColor: colors.Gray,
-                        marginTop: 10,
-                        marginHorizontal: dimensions.widthOf(5),
-                    }]}>
-                        <Text style={[ms.mainButtion, {
-                            color: colors.White,
-                            fontSize: 20,
-                            fontWeight: 'bold',
-                            fontFamily: fonts.semiBold
-                        }]}>{
-                                `X : ${gyroscope_data.x != null ? Number(gyroscope_data.x).toFixed(6) : '0:00'}\nY : ${gyroscope_data.y != null ? Number(gyroscope_data.y).toFixed(6) : '0:00'}\nZ : ${gyroscope_data.z != null ? Number(gyroscope_data.z).toFixed(6) : '0:00'}`
-                            }</Text>
-                    </View>
-
-                    <Text style={[ms.mainButtion, {
-                        color: colors.mainBlue,
-                        fontSize: 18,
-                        marginTop: dimensions.heightOf(5),
-                        textAlign: 'center',
-                        fontWeight: '700',
-                        fontFamily: fonts.semiBold
-                    }]}>Steps Count
-                    </Text>
-
-                    <View style={[ms.mainButtionContainer, {
-                        backgroundColor: colors.Gray,
-                        marginTop: 10,
-                        marginHorizontal: dimensions.widthOf(5),
-                    }]}>
-                        <Text style={[ms.mainButtion, {
-                            color: colors.White,
-                            fontSize: 20,
-                            fontWeight: 'bold',
-                            fontFamily: fonts.semiBold
-                        }]}>15</Text>
-                    </View>
-
-                    <Text style={[ms.mainButtion, {
-                        color: colors.mainBlue,
-                        fontSize: 18,
-                        marginTop: dimensions.heightOf(5),
-                        textAlign: 'center',
-                        fontWeight: '700',
-                        fontFamily: fonts.semiBold
-                    }]}>Direction
-                    </Text>
-
-                    <View style={[ms.mainButtionContainer, {
-                        backgroundColor: colors.Gray,
-                        marginTop: 10,
-                        marginHorizontal: dimensions.widthOf(5),
-                    }]}>
-                        <Text style={[ms.mainButtion, {
-                            color: colors.White,
-                            fontSize: 20,
-                            fontWeight: 'bold',
-                            fontFamily: fonts.semiBold
-                        }]}>-</Text>
-                    </View>
+                        {/* <View style={[ms.mainButtionContainer, {
+                            backgroundColor: colors.Gray,
+                            marginTop: 10,
+                            marginHorizontal: dimensions.widthOf(5),
+                        }]}>
+                            <Text style={[ms.mainButtion, {
+                                color: colors.White,
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                fontFamily: fonts.semiBold
+                            }]}>{turn}</Text>
+                        </View> */}
+                    </ScrollView>
                     <Dialog
                         visible={isRefFound}
                         dialogTitle={<DialogTitle title="Reference Point" />}
@@ -270,7 +322,7 @@ export default function Dashboard({ navigation }) {
                                     textAlign: 'left',
                                     fontWeight: '700',
                                     fontFamily: fonts.semiBold
-                                }]}>You are now standing on reference point !
+                                }]}>You are now standing on Reference Point {curRef?.current?.point ? " - " + String(curRef.current.point + 1).padStart(2, '0') : ''}
                                 </Text>
 
                                 <TouchableOpacity
@@ -281,6 +333,7 @@ export default function Dashboard({ navigation }) {
                                             type: 'ADD',
                                             payload: refData
                                         })
+                                        setc(refData.point + 1);
                                         setRef(null);
                                         navigation.goBack();
                                     }}
@@ -307,6 +360,7 @@ export default function Dashboard({ navigation }) {
                                             type: 'ADD',
                                             payload: refData
                                         })
+                                        setc(refData.point + 1);
                                         setRef(null);
                                     }}
                                     activeOpacity={0.8}>
@@ -390,7 +444,6 @@ const styles = StyleSheet.create({
         backgroundColor: colors.White,
         width: '100%',
         height: dimensions.heightOf(100),
-        paddingHorizontal: 15,
         paddingVertical: 6,
         marginVertical: 0,
     },
