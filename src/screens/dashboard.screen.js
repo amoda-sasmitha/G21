@@ -31,20 +31,23 @@ export default function Dashboard({ navigation }) {
     const [isRefFound, setRefFound, curRefFound] = useState(false);
     const [refData, setRef, curRef] = useState(null);
     const [position, setPosition, curPosition] = useState({ lat: null, lng: null });
-    const [accelerometer_data, setAccelerometer, curAccelerometer] = useState({ x: null, y: null, z: null });
+    const [accelerometer_data, setAccelerometer, curAccelerometer] = useState({ x: null, y: null, z: null, timestamp: 0 });
     const [gyroscope_data, setGyroscope, curGyroscope] = useState({ x: null, y: null, z: null });
     const [steps, setSteps, curSteps] = useState(0);
     const [turn, setTurn, curTurn] = useState('-');
     const [c, setc, curc] = useState(0);
+
+    const [dPoistion, set3DPoistion, cur3DPoistion] = useState([0.0, 0.0, 0.0]);
     const dispatch = useDispatch()
 
     const data_land = useSelector((state) => state.ref.landmarks);
     const landmarks = JSON.parse(JSON.stringify(data_land));
 
     useEffect(() => {
-        const subscription_acc = accelerometer.subscribe(({ x, y, z }) => {
-            setTurn(decideTurn(curAccelerometer.current, { x, y, z }));
-            setAccelerometer({ x, y, z })
+        const subscription_acc = accelerometer.subscribe(({ x, y, z, timestamp }) => {
+            // setTurn(decideTurn(curAccelerometer.current, { x, y, z }));
+            positionDetect(x, y, z, timestamp)
+            setAccelerometer({ x, y, z, timestamp })
         });
         const subscription_gyro = gyroscope.subscribe(({ x, y, z }) =>
             setGyroscope({ x, y, z })
@@ -59,73 +62,40 @@ export default function Dashboard({ navigation }) {
         }
 
         startCounter(config);
-        const watchID = Geolocation.watchPosition(
-            (res_position) => {
-                const lat = res_position?.coords?.latitude ?? null;
-                const lng = res_position?.coords?.longitude ?? null;
-                if (lat != null && lng != null) {
-                    setPosition({ lat, lng });
+        // const watchID = Geolocation.watchPosition(
+        //     (res_position) => {
+        //         const lat = res_position?.coords?.latitude ?? null;
+        //         const lng = res_position?.coords?.longitude ?? null;
+        //         if (lat != null && lng != null) {
+        //             setPosition({ lat, lng });
 
-                    for (let i = 0; i < landmarks.length; i++) {
-                        const mark = landmarks[i];
-                        const dis = distanceCalc(lat, lng, mark.x, mark.y);
-                        if (dis <= 15 && !isRefFound) {
-                            setRefFound(true);
-                            setRef({
-                                accelerometer: curAccelerometer.current,
-                                gyroscope: curGyroscope.current,
-                                position: curPosition.current,
-                                point: i,
-                                turn: curTurn.current,
-                                steps: curSteps.current
-                            })
-                            break;
-                        }
-
-                    }
-                }
-            },
-            (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
-            { enableHighAccuracy: false, distanceFilter: 0, interval: 4000, fastestInterval: 2000 },
-        );
-
-        // const locationInterval = setInterval(() => {
-        //     Geolocation.getCurrentPosition(
-        //         position => {
-        //             const lat = position?.coords?.latitude ?? null;
-        //             const lng = position?.coords?.longitude ?? null;
-        //             if (lat != null && lng != null) {
-        //                 setPosition({ lat, lng });
-
-        //                 for (let i = 0; i < landmarks.length; i++) {
-        //                     const mark = landmarks[i];
-        //                     const dis = distanceCalc(lat, lng, mark.x, mark.y);
-        //                     if (dis <= 15 && !isRefFound) {
-        //                         setRefFound(true);
-        //                         setRef({
-        //                             accelerometer: curAccelerometer.current,
-        //                             gyroscope: curGyroscope.current,
-        //                             position: curPosition.current,
-        //                             point: i,
-        //                             turn: curTurn.current,
-        //                             steps: curSteps.current
-        //                         })
-        //                         break;
-        //                     }
-
+        //             for (let i = 0; i < landmarks.length; i++) {
+        //                 const mark = landmarks[i];
+        //                 const dis = distanceCalc(lat, lng, mark.x, mark.y);
+        //                 if (dis <= 15 && !isRefFound) {
+        //                     setRefFound(true);
+        //                     setRef({
+        //                         accelerometer: curAccelerometer.current,
+        //                         gyroscope: curGyroscope.current,
+        //                         position: curPosition.current,
+        //                         point: i,
+        //                         turn: curTurn.current,
+        //                         steps: curSteps.current
+        //                     })
+        //                     break;
         //                 }
+
         //             }
-        //         },
-        //         (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
-        //         { enableHighAccuracy: false, timeout: 5000, maximumAge: 0 },
-        //     );
-        // }, 2000);
+        //         }
+        //     },
+        //     (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
+        //     { enableHighAccuracy: false, distanceFilter: 0, interval: 4000, fastestInterval: 2000 },
+        // );
 
         return () => {
             subscription_acc.unsubscribe();
             subscription_gyro.unsubscribe();
-            // clearInterval(locationInterval);
-            Geolocation.clearWatch(watchID);
+            // Geolocation.clearWatch(watchID);
             stopCounter();
         };
     }, []);
@@ -147,6 +117,33 @@ export default function Dashboard({ navigation }) {
         } else {
             return '-';
         }
+    }
+
+    const positionDetect = (new_x, new_y, new_z, new_timestamp) => {
+        const { x, y, z, timestamp } = curAccelerometer.current;
+        if (timestamp == 0) {
+            return [0.0, 0.0, 0.0]
+        }
+
+        let velocity = [0.0, 0.0, 0.0];
+        let pos = cur3DPoistion.current;
+
+        const dt = (new_timestamp - timestamp) * 1.0 / 1000.0;
+        velocity[0] += (new_x + x) / 2 * dt;
+        velocity[1] += (new_y + y) / 2 * dt;
+        velocity[2] += (new_z + z) / 2 * dt;
+
+        // console.log(dt);
+        // console.log(`Y: ${velocity[0] * dt} X: ${velocity[2] * dt} `)
+
+        velocity[2] = velocity[2] / 20;
+        velocity[0] = (curSteps.current >= 5) ? velocity[0] : velocity[0] / 2;
+        for (let i = 0; i < 3; i++) {
+            const change = velocity[i] * dt;
+            if (change > 0)
+                pos[i] += change;
+        }
+        set3DPoistion(pos);
     }
 
     return (
@@ -187,21 +184,9 @@ export default function Dashboard({ navigation }) {
                                 fontWeight: 'bold',
                                 fontFamily: fonts.semiBold
                             }]}>
-                                X : {position?.lat != null ? Number(position.lat).toFixed(6) : '-'}
-                            </Text>
-                        </View>
-
-                        <View style={[ms.mainButtionContainer, {
-                            backgroundColor: colors.Gray,
-                            marginHorizontal: dimensions.widthOf(5),
-                            marginTop: 20
-                        }]}>
-                            <Text style={[ms.mainButtion, {
-                                color: colors.White,
-                                fontSize: 20,
-                                fontWeight: 'bold',
-                                fontFamily: fonts.semiBold
-                            }]}> Y : {position?.lng != null ? Number(position.lng).toFixed(6) : '-'}
+                                {
+                                    `X : ${dPoistion[0].toFixed(12)}\nY : ${dPoistion[2].toFixed(12)}`
+                                }
                             </Text>
                         </View>
 
@@ -213,7 +198,8 @@ export default function Dashboard({ navigation }) {
                                 position: curPosition.current,
                                 point: curc.current,
                                 turn: curTurn.current,
-                                steps: curSteps.current
+                                steps: curSteps.current,
+                                dPosition: cur3DPoistion.current
                             })
                         }}>
                             <Text style={[ms.mainButtion, {
@@ -333,14 +319,13 @@ export default function Dashboard({ navigation }) {
                                 <TouchableOpacity
                                     disabled={false}
                                     onPress={() => {
-                                        setRefFound(false);
                                         dispatch({
                                             type: 'ADD',
                                             payload: refData
                                         })
                                         setc(refData.point + 1);
+                                        setRefFound(false);
                                         setRef(null);
-                                        navigation.goBack();
                                     }}
                                     activeOpacity={0.8}>
                                     <View style={[ms.mainButtionContainer, {
@@ -361,11 +346,6 @@ export default function Dashboard({ navigation }) {
                                     disabled={false}
                                     onPress={() => {
                                         setRefFound(false);
-                                        dispatch({
-                                            type: 'ADD',
-                                            payload: refData
-                                        })
-                                        setc(refData.point + 1);
                                         setRef(null);
                                     }}
                                     activeOpacity={0.8}>
@@ -385,7 +365,7 @@ export default function Dashboard({ navigation }) {
 
                                 <TouchableOpacity
                                     disabled={false}
-                                    onPress={() => { setRefFound(false); setRef(null); }}
+                                    onPress={() => { setRefFound(false); setRef(null); navigation.goBack(); }}
                                     activeOpacity={0.8}>
                                     <Text style={[ms.mainButtion, {
                                         color: colors.mainBlue,

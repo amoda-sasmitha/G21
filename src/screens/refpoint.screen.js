@@ -24,7 +24,7 @@ export default function RefPoint({ navigation }) {
     const point = route?.params?.point ?? null;
     const refs = useSelector((state) => state.ref.ref);
     const ref_data = refs.reverse().find(ref => ref.point === point);
-    console.log(ref_data);
+    // console.log(ref_data.dPosition[0]);
     if (!ref_data) {
         return (
             <SafeAreaView style={{ backgroundColor: colors.White }}>
@@ -64,21 +64,9 @@ export default function RefPoint({ navigation }) {
                                 fontWeight: 'bold',
                                 fontFamily: fonts.semiBold
                             }]}>
-                                X : {ref_data.position?.lat != null ? Number(ref_data.position.lat).toFixed(6) : '-'}
-                            </Text>
-                        </View>
-
-                        <View style={[ms.mainButtionContainer, {
-                            backgroundColor: colors.Gray,
-                            marginHorizontal: dimensions.widthOf(5),
-                            marginTop: 20
-                        }]}>
-                            <Text style={[ms.mainButtion, {
-                                color: colors.White,
-                                fontSize: 20,
-                                fontWeight: 'bold',
-                                fontFamily: fonts.semiBold
-                            }]}>Y : {ref_data.position?.lng != null ? Number(ref_data.position.lng).toFixed(6) : '-'}
+                                {
+                                    `X : ${ref_data.dPosition[0].toFixed(12)}\nY : ${ref_data.dPosition[2].toFixed(12)}`
+                                }
                             </Text>
                         </View>
 
